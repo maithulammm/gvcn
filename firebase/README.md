@@ -55,6 +55,32 @@ Nếu database đang phục vụ ứng dụng khác, gộp nhánh `gvcn` vào ru
 6. Admin vào **Quản lý GVCN** để nhập họ tên, email Microsoft, lớp và trạng thái hoạt động. Giáo viên sau đó đăng nhập bằng Microsoft và nhận đúng phân công từ máy chủ.
 7. Vào **Danh sách học sinh**, chọn khối/lớp rồi thêm, sửa, xóa hoặc nhập Excel. Giới hạn 28 học sinh/lớp hiện giữ theo workbook gốc.
 
+## Lỗi kết nối API trên gvcnva2.netlify.app
+
+Nếu `https://asia-southeast1-gvcn-3bdf9.cloudfunctions.net/gvcnApi/bootstrap` và yêu cầu OPTIONS đều trả HTTP 404, địa chỉ frontend đang gọi chưa có API hoạt động. Upload frontend lên Netlify không triển khai Cloud Functions.
+
+Đã chuẩn bị `.env.gvcn-3bdf9` cục bộ, được Git bỏ qua, với Tenant ID lấy từ cấu hình Entra của trường và origin `https://gvcnva2.netlify.app`. `.env.example` cũng đã được điền các giá trị công khai này để có thể chuẩn bị trên máy khác. File `.env` này không chứa khóa service account hay Microsoft Client Secret.
+
+Kiểm tra cấu hình và triển khai API bằng tài khoản Google có quyền trên project:
+
+```powershell
+npm.cmd run firebase:check
+npx.cmd --yes firebase-tools login
+npm.cmd run firebase:deploy
+```
+
+`firebase:deploy` chỉ triển khai codebase Functions `gvcn`, không thay đổi database rules hiện có. Nếu Firebase yêu cầu bật thanh toán hoặc thiếu quyền, cần người quản trị dự án xử lý yêu cầu đó trước khi triển khai được; script không tự thay đổi thanh toán hay cấp quyền.
+
+Sau khi triển khai:
+
+```powershell
+npm.cmd run firebase:status
+```
+
+Kết quả mong đợi: `/health` trả 200, OPTIONS của `/bootstrap` trả 204 và GET `/bootstrap` khi chưa có token Microsoft trả 401. Cả ba phản hồi cho trình duyệt phải có `Access-Control-Allow-Origin: https://gvcnva2.netlify.app`. Endpoint health chỉ xác nhận cấu hình API, không đọc hồ sơ hoặc khẳng định đã đăng nhập vào database.
+
+Cuối cùng, tải lại website Netlify và đăng nhập Microsoft. Nếu cần làm việc cục bộ trong lúc chờ triển khai, tắt **Sử dụng dữ liệu dùng chung trên Firebase** trong phần **Kết nối dữ liệu Firebase** ở màn hình đăng nhập rồi lưu. Dữ liệu đã có và các bản chờ đồng bộ vẫn được giữ.
+
 Tài liệu Firebase: [HTTP Functions](https://firebase.google.com/docs/functions/http-events), [triển khai Functions](https://firebase.google.com/docs/functions/get-started), [Admin SDK và database](https://firebase.google.com/docs/database/admin/start).
 
 ## Cấu trúc dữ liệu

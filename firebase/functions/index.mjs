@@ -3,6 +3,7 @@ import { initializeApp } from 'firebase-admin/app';
 import { getDatabase } from 'firebase-admin/database';
 import { createIdentityVerifier } from './identity.mjs';
 import { createService } from './service.mjs';
+import { deploymentStatus } from './health.mjs';
 import { DATABASE_URL, requireValue } from './model.mjs';
 
 initializeApp({databaseURL:DATABASE_URL});
@@ -20,13 +21,17 @@ export const gvcnApi=onRequest({region:'asia-southeast1',timeoutSeconds:60,memor
     res.set('Access-Control-Allow-Methods','GET,POST,PUT,DELETE,OPTIONS');
     res.set('Access-Control-Allow-Headers','Authorization,Content-Type');
     if(req.method==='OPTIONS') { res.status(204).end(); return; }
+    const path=req.path.replace(/\/$/,'')||'/';
+    if(req.method==='GET'&&path==='/health') {
+      const health=deploymentStatus();
+      res.status(health.configured?200:503).json(health);return;
+    }
     const token=/^Bearer ([^\s]+)$/.exec(req.get('authorization')||'')?.[1];
     requireValue(token&&token.length<20000,'Thiếu phiên đăng nhập Microsoft.',401);
     verifyIdentity ||= createIdentityVerifier({tenantId:process.env.MICROSOFT_TENANT_ID,clientId:process.env.MICROSOFT_CLIENT_ID});
     const identity=await verifyIdentity(token);
     requireValue((req.rawBody?.length||0)<=5*1024*1024,'Dữ liệu gửi lên vượt giới hạn 5 MB.',413);
     service ||= createService(getDatabase(),{adminEmail:(process.env.GVCN_ADMIN_EMAIL||'lammt@vietanhschool.edu.vn').toLowerCase().trim()});
-    const path=req.path.replace(/\/$/,'')||'/';
     const body=req.body||{};
     let result;
     if(req.method==='GET'&&path==='/bootstrap') result=await service.bootstrap(identity);

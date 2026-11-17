@@ -83,6 +83,8 @@ npm.cmd test
 
 Xem [hướng dẫn Firebase](firebase/README.md) để triển khai database/API và xử lý cấu hình Microsoft Entra.
 
+Với website `https://gvcnva2.netlify.app`, dùng `npm run firebase:check` để kiểm tra cấu hình triển khai, `npm run firebase:deploy` để triển khai API sau khi đăng nhập Google và `npm run firebase:status` để kiểm tra endpoint/CORS. Upload frontend lên Netlify không tự triển khai API Firebase.
+
 ## Tự động build và triển khai lên Netlify
 
 Đã có `netlify.toml` và lệnh `npm run build`. Lệnh này kiểm tra frontend rồi tạo `dist/` gồm `index.html` và thư mục `assets/`. Netlify chỉ công bố nội dung `dist/`. Thư mục build được tạo lại mỗi lần; sửa mã trong `index.html` và `assets/`, không sửa trực tiếp `dist/`.

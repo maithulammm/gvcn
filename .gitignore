@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.netlify/
+.npm-cache/
+.firebase/
+firebase-debug.log*
+database-debug.log*
+firebase/functions/.env*
+!firebase/functions/.env.example
+firebase/functions/.secret.local
+*-service-account*.json
